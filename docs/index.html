@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>re2c Web Compiler</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        /* Container for the input and output areas */
+        .container {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Style for the input (source code) area */
+        .input-section {
+            width: 48%;
+        }
+
+        /* Style for the output area */
+        .output-section {
+            width: 48%;
+        }
+
+        /* Textarea styling */
+        textarea {
+            width: 100%;
+            height: 400px;
+            font-family: monospace;
+        }
+
+        /* Button styling */
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 20px;
+            display: block;
+        }
+
+        /* Output area styling */
+        #output {
+            white-space: pre-wrap;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>re2c Web Compiler</h1>
+
+    <!-- Container to hold both input and output side by side -->
+    <div class="container">
+
+        <!-- Input Section -->
+        <div class="input-section">
+            <label for="sourceCode">Enter your source code:</label>
+            <textarea id="sourceCode" placeholder="Enter your code here..."></textarea>
+            <button onclick="compileCode()">Compile</button>
+        </div>
+
+        <!-- Output Section -->
+        <div class="output-section">
+            <h2>Output:</h2>
+            <div id="output"></div>
+        </div>
+    </div>
+
+    <!-- Include the Emscripten-compiled re2c.js -->
+    <script src="re2c.js"></script>
+
+    <!-- Main JS code to handle the compilation -->
+    <script>
+        // Function to compile code when button is clicked
+        function compileCode() {
+            // Get the user's source code from the textarea
+            const sourceCode = document.getElementById('sourceCode').value;
+
+            // Check if source code is provided
+            if (sourceCode.trim() === '') {
+                alert('Please enter some code to compile.');
+                return;
+            }
+
+            // Reset the output area
+            document.getElementById('output').innerText = 'Compiling...';
+
+            // Emscripten: Calling the re2c utility
+            try {
+                // Use Emscripten FS to write the source code to a virtual file
+                FS.writeFile('/input.txt', sourceCode);
+
+                // Execute the re2c utility, assuming it reads input from /input.txt
+                const result = callMain(["/input.txt", "-o", "/output.txt", "-i", "--case-ranges"]);
+
+                // Read the output from the virtual file system (re2c output)
+                const output = FS.readFile('/output.txt', { encoding: 'utf8' });
+
+                // Display the output in the div
+                document.getElementById('output').innerText = output;
+            } catch (e) {
+                document.getElementById('output').innerText = 'Compilation failed: ' + e.message;
+            }
+        }
+    </script>
+
+</body>
+</html>
